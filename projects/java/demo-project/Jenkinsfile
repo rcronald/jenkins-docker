@@ -13,11 +13,10 @@ node {
 
     stage('Checkout') {
         checkout scm
-
-        sh "cd projects/java/demo-project"
     }
 
     stage('Build'){
+        sh "cd projects/java/demo-project"
         sh "mvn clean install"
     }
 
