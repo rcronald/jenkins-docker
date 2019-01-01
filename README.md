@@ -4,3 +4,6 @@
 With this repository you can manage the process of buildingm testing with the highest coverage, and deployment phases.
 
 ...
+
+##References
+* https://jenkins.io/doc/book/installing/
