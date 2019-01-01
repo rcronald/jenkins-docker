@@ -1,4 +1,4 @@
-def CONTAINER_NAME="jenkins-pipeline"
+def CONTAINER_NAME="java-demo-project"
 def CONTAINER_TAG="latest"
 def DOCKER_HUB_USER="hakdogan"
 def HTTP_PORT="8090"
@@ -37,7 +37,7 @@ node {
     }
 
     stage('Image Build'){
-        imageBuild(CONTAINER_NAME, CONTAINER_TAG)
+        imageBuild(CONTAINER_NAME, CONTAINER_TAG, PROJECT_PATH)
     }
 
     stage('Push to Docker Registry'){
@@ -59,8 +59,8 @@ def imagePrune(containerName){
     } catch(error){}
 }
 
-def imageBuild(containerName, tag){
-    dir(PROJECT_PATH) {
+def imageBuild(containerName, tag, projectPath){
+    dir($projectPath) {
         sh "docker build -t $containerName:$tag  -t $containerName --pull --no-cache ."
     }
     echo "Image build complete"
