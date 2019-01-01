@@ -60,7 +60,7 @@ def imagePrune(containerName){
 }
 
 def imageBuild(containerName, tag, projectPath){
-    dir($projectPath) {
+    dir("${projectPath}") {
         sh "docker build -t $containerName:$tag  -t $containerName --pull --no-cache ."
     }
     echo "Image build complete"
