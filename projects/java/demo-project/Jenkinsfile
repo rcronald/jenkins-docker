@@ -16,7 +16,6 @@ node {
     }
 
     stage('Build'){
-        sh "cd projects/java/demo-project"
         sh "mvn clean install"
     }
 
