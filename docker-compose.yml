@@ -19,6 +19,9 @@ services:
     volumes:
       - /tmp/jenkins:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-      - /Users/rcronald/.m2/repository:root/.m2/repository/
+      # If your $HOME variable exists "echo $HOME", if the result is null, create it with "echo '$HOME=/Users/{user}' > ~/.bashrc && source ~/.bashrc"
+      - $HOME/.m2/repository:root/.m2/repository/
+      # Also you can use ~ as current user path
+      #- ~/.m2/repository:root/.m2/repository/
     depends_on:
       - sonarqube
