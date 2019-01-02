@@ -15,16 +15,9 @@ node {
         checkout scm
     }
 
-    stage('Build'){
-        steps {
-            dir(PROJECT_PATH) {
-                sh "mvn clean install"
-            }
-        }
-        post {
-            success {
-                junit 'target/surefire-reports/*.xml' 
-            }
+    stage('Build') {
+        dir(PROJECT_PATH) {
+            sh "mvn clean install"
         }
     }
 
