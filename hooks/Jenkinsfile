@@ -1,0 +1,138 @@
+pipeline {
+    agent any
+    //environment {
+        //IMAGE = readMavenPom().getArtifactId()    //Use Pipeline Utility Steps
+        //VERSION = readMavenPom().getVersion()
+        //DB_ENGINE = ''
+        //SAUCE_ACCESS = credentials('sauce-dev')
+        //SAUCE_ACCESS_USR containing the username
+        //SAUCE_ACCESS_PSW containing the password
+    //}
+
+    stages {
+        stage('Initialize') {
+            steps {
+                echo "Initialize"
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                echo "Checkout"
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "Build"
+            }
+        }
+
+        stage('Quality Analysis') {
+            //environment {
+                //SONAR = credentials('sonar')
+            //}
+            parallel {
+                stage ("Integration Test") {
+                    steps {
+                        echo 'Run integration tests here...'
+                    }
+                }
+                stage("Sonar Scan") {
+                    steps {
+                        echo 'Sonar Scan...'
+                        //sh "mvn sonar:sonar -Dsonar.login=$SONAR_PSW"
+                    }
+                }
+            }
+        }
+
+        stage('Generate Images') {
+            steps {
+                echo "Generate Images"
+            }
+        }
+
+        stage('Tests') {
+            parallel {
+                stage('Chrome Test') {
+                    steps {
+                        echo "Chrome Test"
+                    }
+                }
+                stage('Firefox Test') {
+                    steps {
+                        echo "Firefox Test"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            //when {
+            //    branch 'master'
+            //}
+            steps {
+                //input "Does the staging environment look ok?"
+                script {
+                    def userInput = input(
+                        id: 'userInput', message: 'Let\'s promote?', parameters: [
+                            [$class: 'ChoiceParameterDefinition', defaultValue: 'uat', description: 'Environment', name: 'env', choices: "Integration\nTesting\nStaging\nProduction"],
+                            [$class: 'ChoiceParameterDefinition', defaultValue: 'uat1', description: 'Target', name: 'target', choices: "Azure\nAWS\nGoogle\nDigitalOcean"]
+                        ]
+                    )
+                    echo ("Env: "+userInput['env'])
+                    echo ("Target: "+userInput['target'])
+                }
+                
+                echo "Deploy"
+            }
+        }
+
+    }
+    post {
+        always {
+            echo 'I have finished'
+            deleteDir() // clean up workspace
+        }
+        success {
+            echo 'I succeeded!'
+        }
+        unstable {
+            echo 'I am unstable :/'
+        }
+        failure {
+            echo 'I failed :('
+        }
+        changed {
+            echo 'Things are different...'
+        }
+    }
+}
+
+def imagePrune(containerName){
+    try {
+        sh "docker image prune -f"
+        sh "docker stop $containerName"
+    } catch(error){}
+}
+
+def imageBuild(containerName, tag, projectPath){
+    dir("${projectPath}") {
+        sh "docker build -t $containerName:$tag  -t $containerName --pull --no-cache ."
+    }
+    echo "Image build complete"
+}
+
+def pushToImage(containerName, tag, dockerUser, dockerPassword){
+    sh "docker login -u $dockerUser -p $dockerPassword"
+    sh "docker tag $containerName:$tag $dockerUser/$containerName:$tag"
+    sh "docker push $dockerUser/$containerName:$tag"
+    echo "Image push complete"
+}
+
+def runApp(containerName, tag, dockerHubUser, httpPort){
+    sh "docker pull $dockerHubUser/$containerName"
+    sh "docker run -d --rm -p $httpPort:$httpPort --name $containerName $dockerHubUser/$containerName:$tag"
+    echo "Application started on port: ${httpPort} (http)"
+}
